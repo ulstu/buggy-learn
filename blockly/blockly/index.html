@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blockly + Webots</title>
+</head>
+<body>
+    <button id="runButton">Запустить программу</button>
+    <table style="width: 100%; height: 600px">
+        <tr>
+            <td style="width: 30%">
+                <div id="blocklyDiv" style="height: 100%; width: 100%;"></div>
+            </td>
+            <td>
+                <div class="webots-view-container" style="width: 100%; height: 100%">
+                    <webots-view></webots-view>
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <script type="module" src="static/main.js"></script>
+    <script type="module" src="static/setup_viewer.js"></script>
+  </html>

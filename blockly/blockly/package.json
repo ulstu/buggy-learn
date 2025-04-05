@@ -1,0 +1,14 @@
+{
+  "dependencies": {
+    "blockly": "^11.2.1",
+    "bootstrap": "^5.3.3"
+  },
+  "devDependencies": {
+    "vite": "^6.2.2"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build --watch",
+    "preview": "vite preview"
+  }
+}
