@@ -1,19 +1,51 @@
 import * as Blockly from 'blockly';
 import { pythonGenerator } from 'blockly/python';
 
-// ✅ Определение блоков
+// Debug log to confirm Blockly.Xml.textToDom is available
+console.log("Blockly.Xml.textToDom:", typeof Blockly.Xml.textToDom);
+
+// ✅ Определение кастомных блоков
 Blockly.defineBlocksWithJsonArray([
     {
         "type": "move_forward",
-        "message0": "Двигаться вперёд",
+        "message0": "Двигаться вперёд на %1 мс",
+        "args0": [
+            {
+                "type": "input_value",
+                "name": "DURATION",
+                "check": "Number"
+            }
+        ],
         "previousStatement": null,
         "nextStatement": null,
         "colour": 160,
-        "tooltip": "Движение робота вперёд"
+        "tooltip": "Движение робота вперёд на заданную длительность"
+    },
+    {
+        "type": "move_backward",
+        "message0": "Двигаться назад на %1 мс",
+        "args0": [
+            {
+                "type": "input_value",
+                "name": "DURATION",
+                "check": "Number"
+            }
+        ],
+        "previousStatement": null,
+        "nextStatement": null,
+        "colour": 180,
+        "tooltip": "Движение робота назад на заданную длительность"
     },
     {
         "type": "turn_left",
-        "message0": "Повернуть влево",
+        "message0": "Повернуть влево на %1 мс",
+        "args0": [
+            {
+                "type": "input_value",
+                "name": "DURATION",
+                "check": "Number"
+            }
+        ],
         "previousStatement": null,
         "nextStatement": null,
         "colour": 120,
@@ -21,7 +53,14 @@ Blockly.defineBlocksWithJsonArray([
     },
     {
         "type": "turn_right",
-        "message0": "Повернуть вправо",
+        "message0": "Повернуть вправо на %1 мс",
+        "args0": [
+            {
+                "type": "input_value",
+                "name": "DURATION",
+                "check": "Number"
+            }
+        ],
         "previousStatement": null,
         "nextStatement": null,
         "colour": 240,
@@ -31,39 +70,59 @@ Blockly.defineBlocksWithJsonArray([
 
 console.log("✅ Кастомные блоки зарегистрированы в Blockly");
 
-// ✅ Определение генераторов JavaScript
+// ✅ Генераторы Python для кастомных блоков
 pythonGenerator.forBlock['move_forward'] = function(block) {
-    return "move_forward()\n";
+    const duration = pythonGenerator.valueToCode(block, 'DURATION', pythonGenerator.ORDER_NONE) || '1000';
+    return `MoveForward(${duration})\n`;
+};
+
+pythonGenerator.forBlock['move_backward'] = function(block) {
+    const duration = pythonGenerator.valueToCode(block, 'DURATION', pythonGenerator.ORDER_NONE) || '1000';
+    return `MoveBackward(${duration})\n`;
 };
 
 pythonGenerator.forBlock['turn_left'] = function(block) {
-    return "turn_left()\n";
+    const duration = pythonGenerator.valueToCode(block, 'DURATION', pythonGenerator.ORDER_NONE) || '1000';
+    return `TurnLeft(${duration})\n`;
 };
 
 pythonGenerator.forBlock['turn_right'] = function(block) {
-    return "turn_right()\n";
+    const duration = pythonGenerator.valueToCode(block, 'DURATION', pythonGenerator.ORDER_NONE) || '1000';
+    return `TurnRight(${duration})\n`;
 };
 
-console.log("✅ Генераторы JavaScript зарегистрированы");
+console.log("✅ Генераторы Python зарегистрированы");
 
-// ✅ Функция для инициализации Blockly
+// ✅ Функция для инициализации Blockly с расширенным набором инструментов
 function initBlockly() {
     console.log("🚀 Запуск Blockly...");
 
     const toolbox = {
         "kind": "flyoutToolbox",
         "contents": [
-            { "kind": "block", "type": "move_forward" },
-            { "kind": "block", "type": "turn_left" },
-            { "kind": "block", "type": "turn_right" },
-            { "kind": "block", "type": "controls_repeat" },
-            { "kind": "block", "type": "math_number" }
+            {"kind": "block", "type": "move_forward"},
+            {"kind": "block", "type": "move_backward"},
+            {"kind": "block", "type": "turn_left"},
+            {"kind": "block", "type": "turn_right"},
+            {"kind": "block", "type": "controls_if", "label": "ЕСЛИ"},
+            {"kind": "block", "type": "logic_compare", "label": "СРАВНЕНИЕ"},
+            {"kind": "block", "type": "controls_repeat_ext", "label": "ПОВТОРИТЬ"},
+            {"kind": "block", "type": "math_number", "label": "ЧИСЛО"},
+            {"kind": "block", "type": "math_arithmetic", "label": "МАТЕМАТИКА"},
+            {"kind": "block", "type": "variables_get", "label": "ПОЛУЧИТЬ ПЕРЕМЕННУЮ"},
+            {"kind": "block", "type": "variables_set", "label": "УСТАНОВИТЬ ПЕРЕМЕННУЮ"}
         ]
     };
 
-    const workspace = Blockly.inject('blocklyDiv', { toolbox });
+    const workspace = Blockly.inject('blocklyDiv', {
+        toolbox: toolbox,
+        toolboxPosition: 'start',
+        trashcan: true,
+        scrollbars: true,
+        sounds: false
+    });
 
-    console.log("✅ Blockly успешно инициализирован.");
+    console.log("✅ Blockly успешно инициализирован с расширенным набором блоков.");
     return workspace;
 }
 

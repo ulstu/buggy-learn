@@ -1,0 +1,56 @@
+#VRML_SIM R2023b utf8
+
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/objects/backgrounds/protos/TexturedBackground.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/objects/backgrounds/protos/TexturedBackgroundLight.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/objects/floors/protos/CircleArena.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/robots/mobsya/thymio/protos/Thymio2.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/objects/toys/protos/RubberDuck.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/objects/plants/protos/FlowerPot.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/objects/balls/protos/FifaSoccerBall.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/objects/drinks/protos/Can.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/objects/balls/protos/Ball.proto"
+
+WorldInfo {
+  basicTimeStep 10
+  contactProperties [
+    ContactProperties {
+      material2 "thymio body"
+      coulombFriction [
+        0.7
+      ]
+    }
+  ]
+}
+Viewpoint {
+  orientation 0.22741652278738939 0.09114696778089854 -0.9695225399275876 2.4003379320512734
+  position 1.876004275374465 1.8339481929293202 1.3140108939659105
+  follow "Thymio II"
+}
+TexturedBackground {
+}
+TexturedBackgroundLight {
+}
+CircleArena {
+}
+DEF THYMIO Thymio2 {
+  translation -1.566595683212546e-07 -4.172341504359311e-10 -2.006781952693104e-05
+  rotation -7.806321261956087e-06 -0.9999999999466932 6.758317225516539e-06 0.00950520168539686
+  controller "blockly_controller"
+  window "thymio2"
+  supervisor TRUE
+}
+RubberDuck {
+  translation 0.27818 0.250827 0.02
+}
+FlowerPot {
+  translation -0.27201 0.263785 0
+}
+FifaSoccerBall {
+  translation 0.281093 0.775628 0.12
+}
+Can {
+  translation -0.325727 -0.313732 0.06
+}
+Ball {
+  translation 0.44151 -0.320055 0.1625
+}

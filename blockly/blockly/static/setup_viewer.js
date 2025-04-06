@@ -50,6 +50,8 @@ function fetchWebotsStreamURL() {
       setTimeout(checkWebSocketAvailability, 2000, webotsStreamURL);
     } else {
       console.error("Ошибка получения webots_stream_port:", data.detail);
+      webotsStreamURL = 'ws://localhost:1235';
+      setTimeout(checkWebSocketAvailability, 2000, webotsStreamURL);
     }
   })
   .catch(error => console.error("Ошибка при вызове API:", error));

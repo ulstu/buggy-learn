@@ -4,22 +4,117 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Blockly + Webots</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        #mainContainer {
+            display: flex;
+            flex: 1;
+            height: 100%;
+        }
+        #blocklyDiv {
+            height: 100%;
+            width: 100%;
+        }
+        .webots-view-container {
+            height: 100%;
+            width: 100%;
+        }
+        #resizable {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+        #blocklyContainer {
+            flex: 0 0 30%;
+            display: flex;
+            flex-direction: column;
+            resize: horizontal;
+            overflow: auto;
+        }
+        #webotsContainer {
+            flex: 1;
+            display: flex;
+        }
+        #modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+        }
+        #modalOverlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+        .button-container {
+            display: flex;
+            gap: 10px;
+            padding: 10px;
+            justify-content: center;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 14px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007BFF;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:active {
+            background-color: #003f7f;
+        }
+    </style>
 </head>
 <body>
-    <button id="runButton">Запустить программу</button>
-    <table style="width: 100%; height: 600px">
-        <tr>
-            <td style="width: 30%">
-                <div id="blocklyDiv" style="height: 100%; width: 100%;"></div>
-            </td>
-            <td>
-                <div class="webots-view-container" style="width: 100%; height: 100%">
+    <div class="button-container">
+        <button id="runButton">Запустить программу</button>
+        <button id="saveButton">Сохранить программу</button>
+        <button id="loadButton">Загрузить программу</button>
+    </div>
+    <div id="mainContainer">
+        <div id="resizable">
+            <div id="blocklyContainer">
+                <div id="blocklyDiv"></div>
+            </div>
+            <div id="webotsContainer">
+                <div class="webots-view-container">
                     <webots-view></webots-view>
                 </div>
-            </td>
-        </tr>
-    </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for saving program -->
+    <div id="modalOverlay"></div>
+    <div id="modal">
+        <label for="programName">Введите имя программы:</label>
+        <input type="text" id="programName" />
+        <button id="saveProgramConfirm">Сохранить</button>
+        <button id="cancelSave">Отмена</button>
+    </div>
 
     <script type="module" src="static/main.js"></script>
     <script type="module" src="static/setup_viewer.js"></script>
-  </html>
+</body>
+</html>

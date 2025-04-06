@@ -10,9 +10,9 @@ APP_MEDIA_DIR := ${ROBOTBENCHMARK_ROOT_DIR}/application/media
 NVIDIA_GPU:=$(shell (docker info | grep Runtimes | grep nvidia 1> /dev/null && command -v nvidia-smi 1>/dev/null 2>/dev/null && nvidia-smi | grep Processes 1>/dev/null 2>/dev/null) && echo '--runtime nvidia --gpus all' || echo '')
 IMAGE=ulstub
 FLAVOR ?= devel
-ROBOT_PANEL_PORT ?= 8008
-VS_PORT ?= 31415
-WEBOTS_STREAM_PORT ?= 1234
+ROBOT_PANEL_PORT ?= 8009
+VS_PORT ?= 31416
+WEBOTS_STREAM_PORT ?= 1235
 DISPLAY=:1
 CONTAINER_NAME:=${IMAGE}-${FLAVOR}
 
@@ -85,6 +85,8 @@ start-webots:
 		--port=1234 --mode=pause --heartbeat=5000 --stream=x3d \
 		/ulstu/repositories/${PROJECT_NAME}/worlds/scene.wbt'
 
+start-dev-server:
+	docker exec -d -i ${IMAGE}-${FLAVOR} bash -c 'python3 /ulstu/server/send_cmd_server.py'
 
 stop-webots:
 	docker exec -i ${IMAGE}-${FLAVOR} pkill -f webots
