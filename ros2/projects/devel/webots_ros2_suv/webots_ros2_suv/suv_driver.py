@@ -35,3 +35,9 @@ class SUVDriver:
         except  Exception as err:
             print(f'{str(err)}')
 
+        
+        #print(self.__gps.getValues())
+        #print(self.__gps.getSpeed())
+        #print(self.__gps.getSpeedVector())
+        #self.__publish_odometry()
+        

@@ -1,0 +1,142 @@
+# Adaptive Monte Carlo Localization для определения позиции и ориентации робота на карте
+# amcl:
+#   ros__parameters:
+#     base_frame_id: base_link # base_footprint
+#     global_frame_id: map
+#     laser_min_range: 0.01
+#     laser_max_range: 100.0
+#     # set_initial_pose: true
+#     # initial_pose: {
+#     #   x: 1.25, # 1.5 / 2.27893
+#     #   y: 0.0,  # -5.0 / -6.80512
+#     #   z: 0.0,  # 0.48411399999999993
+#     #   yaw: 0.0, 
+#     # }
+#     max_beams: 256 # Используем каждый 8-ой луч лидара (2048 (горизонтальное разрешение) / 8 ≈ 256)
+#     min_particles: 5000
+#     max_particles: 10000
+#     odom_frame_id: odom
+#     robot_model_type: 'nav2_amcl::DifferentialMotionModel' # nav2_amcl::OmniMotionModel
+#     tf_broadcast: true # Публиковать tf для локализации
+#     transform_tolerance: 0.1 # Задержка на преобразование tf (полезно при высокой задержке сенсоров)
+#     update_min_a: 0.05 # Обновлять локализацию каждые 0.05 радиан (около 2.8°) поворота
+#     update_min_d: 0.1  # Обновлять локализацию каждые 10 см движения
+#     # always_reset_initial_pose: true
+#     scan_topic: /scan_reliable
+
+# Контроллер движения
+controller_server:
+  ros__parameters:
+    # Основные параметры
+    controller_frequency: 20.0 # Гц
+
+    # Пороговые значения скорости
+    min_x_velocity_threshold: 0.001    # Минимальная линейная скорость (м/с)
+    min_y_velocity_threshold: 0.3      # Минимальная боковая скорость (м/с)
+    min_theta_velocity_threshold: 0.01 # Минимальная угловая скорость (рад/с)
+    max_angular_accel: 3.2             # Максимальное угловое ускорение (рад/с²)
+
+    progress_checker_plugins: ['progress_checker']
+    goal_checker_plugins: ['goal_checker']
+    controller_plugins: ['FollowPath']
+
+    # Проверка движения
+    progress_checker:
+      plugin: 'nav2_controller::SimpleProgressChecker'
+      required_movement_radius: 0.5 # Минимальное смещение за заданное время (м)
+      movement_time_allowance: 10.0 # Время на прогресс перед пересчётом маршрута (с)
+    # Проверка достижения цели
+    goal_checker:
+      plugin: 'nav2_controller::SimpleGoalChecker'
+      xy_goal_tolerance: 0.2     # Допуск по отклонению в положении (м)
+      yaw_goal_tolerance: 1.5708 # Допуск по отклонению в ориентации (рад)
+      stateful: True
+    FollowPath:
+      plugin: 'nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController'
+      use_fixed_curvature_lookahead: false # Использовать фиксированную кривизну траектории движения
+
+      lookahead_dist: 3.0     # Дистанция предсказания траектории (м)
+      min_lookahead_dist: 1.5 # Минимальное значение упреждения (м)
+      max_lookahead_dist: 3.0 # Максимальное значение упреждения (м)
+      lookahead_time: 2.0     # Время упреждения (с)
+
+      min_approach_linear_velocity: 0.2        # Минимальная линейная скорость при приближении к цели (м/с)
+      approach_velocity_scaling_dist: 0.8      # С какой дистанции начать замедляться (м)
+      regulated_linear_scaling_min_radius: 1.5 # Минимальный радиус поворота с замедлением (м)
+
+      # Учёт препятствий
+      use_collision_detection: true      # Избегать столкновения
+      cost_scaling_dist: 0.5             # Дистанция учёта препятствий (м)
+      cost_scaling_gain: 1.0             # Усиление влияния препятствий
+      inflation_cost_scaling_factor: 2.6 # Радиус "опасной зоны" вокруг препятствий (м)
+
+      allow_reversing: true # Разрешить движение задним ходом
+
+      ### ?
+      desired_linear_vel: 0.7
+      rotate_to_heading_angular_vel: 1.0
+      transform_tolerance: 0.1
+      use_velocity_scaled_lookahead_dist: false
+      max_allowed_time_to_collision_up_to_carrot: 1.0
+      use_regulated_linear_velocity_scaling: true
+      use_cost_regulated_linear_velocity_scaling: false
+      regulated_linear_scaling_min_speed: 0.25
+      curvature_lookahead_dist: 1.0
+      use_rotate_to_heading: false
+      rotate_to_heading_min_angle: 0.0
+      max_robot_pose_search_dist: 10.0
+      interpolate_curvature_after_goal: false
+      ###
+
+global_costmap:
+  global_costmap:
+    ros__parameters:
+      update_frequency: 20.0
+      publish_frequency: 10.0
+      global_frame: map
+      robot_base_frame: base_link
+      rolling_window: false
+      resolution: 0.25 # 0.05
+      robot_radius: 0.0
+      # Углы эго-автомобиля: левый задний, левый передний, правый передний, правый задний
+      footprint: '[ [-0.2, 0.25], [0.8, 0.25], [0.8, -0.25], [-0.2, -0.25] ]'
+      track_unknown_space: true
+      plugins: ['static_layer', 'obstacle_layer', 'inflation_layer']
+      static_layer:
+        plugin: 'nav2_costmap_2d::StaticLayer'
+        map_subscribe_transient_local: true
+      obstacle_layer:
+        plugin: 'nav2_costmap_2d::ObstacleLayer'
+        enabled: true
+        footprint_clearing_enabled: true # Очистка препятствий под эго-автомобилем
+        observation_sources: scan
+        scan:
+          topic: /scan_reliable
+          sensor_frame: lidar # laser_link
+          data_type: 'LaserScan'
+          min_obstacle_height: 0.0
+          max_obstacle_height: 1.5
+          clearing: true
+          marking: true
+          raytrace_min_range: 0.3  # Минимальное расстояние, с которого лучи учитываются в расчёте свободного пространства
+          raytrace_max_range: 25.0 # Максимальная дальность, до которой лучи очищают пространство от препятствий
+          obstacle_min_range: 0.3  # Учитываем препятствия от 30 см
+          obstacle_max_range: 15.0 # до 15 м, игнорируя шумы вблизи лидара
+      inflation_layer:
+        plugin: 'nav2_costmap_2d::InflationLayer'
+        cost_scaling_factor: 5.0
+        inflation_radius: 2.6
+      always_send_full_costmap: true
+
+# Загрузка статической глобальной карты, построенной с использованием SLAM Toolbox
+map_server:
+  ros__parameters:
+    yaml_filename: '/home/robolife/ros2_ws/src/webots_ros2_suv/config/slam_toolbox/map/400.yaml'
+    map_subscribe_transient_local: true
+
+planner_server:
+  ros__parameters:
+    planner_plugins: ['GridBased']
+    GridBased:
+      plugin: 'nav2_navfn_planner/NavfnPlanner'
+      tolerance: 0.3

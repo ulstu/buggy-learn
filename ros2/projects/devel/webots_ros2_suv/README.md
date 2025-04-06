@@ -3,7 +3,7 @@
 ## ПО для запуска
 * Linux Ubuntu 22.04
 * ROS2 Humble [Инструкция по установке](https://docs.ros.org/en/humble/Installation.html)
-* [Webots 2023b](https://github.com/cyberbotics/webots/releases/download/R2023b/webots_2023b_amd64.deb)
+* Webots 2023b
 
 ## Минимальные требования к оборудованию
 * процессор Intel не ниже i5
@@ -13,25 +13,23 @@
 
 ## Установка пакетов Linux после установки ROS Humble по стандартной инструкции
 ```
-source /opt/ros/humble/setup.bash
 sudo apt install ros-humble-nav2-common
 sudo apt install ros-humble-webots-ros2
 sudo apt-get install ros-$ROS_DISTRO-pcl-ros ros-$ROS_DISTRO-pluginlib  ros-$ROS_DISTRO-pcl-conversions
 sudo apt-get install libpcap-dev
 sudo apt-get install libboost${BOOST_VERSION}-dev 
-sudo apt install python3-pip
 pip install git+https://github.com/rdesc/pydubins.git
 ```
-
 
 ## Скачивание репозитория
 ```
 mkdir ~/repositories
 cd ~/repositories
-git clone https://github.com/ulstu/cad-self-driving.git
+git clone git@github.com:ulstu/cad-self-driving.git
 mkdir ~/ros2_ws
 mkdir ~/ros2_ws/src
 ```
+
 
 ## Установка решения
 * Необходимо установить символические ссылки на папки simulation/pcl_maps, simulation/robot_interfaces и simulation/webots_ros2_suv в папку ~/ros2_ws/src
@@ -39,15 +37,6 @@ mkdir ~/ros2_ws/src
 ln -s ~/repositories/cad-self-driving/simulation/pcl_maps ~/ros2_ws/src/pcl_maps
 ln -s ~/repositories/cad-self-driving/simulation/robot_interfaces ~/ros2_ws/src/robot_interfaces
 ln -s ~/repositories/cad-self-driving/simulation/webots_ros2_suv ~/ros2_ws/src/webots_ros2_suv
-```
-
-## Установка переменных среды
-* В ~/.bashrc добавить переменные среды (внимательнее с именем пользователя!):
-```
-source /opt/ros/humble/setup.bash
-source ~/ros2_ws/install/setup.bash
-export WEBOTS_HOME=/usr/local/webots
-export ROS2_WEBOTS_HOME=/usr/local/webots
 ```
 
 ## Установка пакетов python
@@ -69,6 +58,14 @@ ln -s ~/repositories/cad-self-driving/drivers/zed-ros2-wrapper ~/ros2_ws/src/zed
 rosdep install --from-paths src --ignore-src -r -y
 ```
 
+* В ~/.bashrc добавить переменные среды (внимательнее с именем пользователя!):
+```
+source /opt/ros/humble/setup.bash
+source /home/user/ros2_ws/install/setup.bash
+export WEBOTS_HOME=/usr/local/webots
+export ROS2_WEBOTS_HOME=/usr/local/webots
+```
+
 Для скачивания и установки весов нейронных сетей скачать в папку ~/ros2_ws/src/webots_ros2_suv/resource файл по ссылке https://disk.yandex.ru/d/SiHdbj_grmqD4A (альтернативная ссылка: https://drive.google.com/drive/folders/1OCcuewvbdDOLtX6npBMKlyta16Tf6_cM), затем:
 
 ```
@@ -78,7 +75,7 @@ unzip resource.zip
 При этом содержимое папки resource (отдельные файлы и папки) должно быть скопировано в папку resource
 
 ## Запуск
-* Перед первым запуском необходимо скомпилировать web-панель по [инструкции](https://github.com/ulstu/cad-self-driving/tree/main/simulation/webots_ros2_suv/map-server) 
+* Перед первым запуском необходимо скомпилировать web-панель по [инструкции](simulation/webots_ros2_suv/map-server) 
 * Компиляция командой 'colcon build' из папки ~/ros2_ws 
 * Запуск командой 'ros2 launch webots_ros2_suv robot_launch.py'
 * После добавления новых файлов из папки ~/ros2_ws необходимо выполнить команду source install/setup.bash

@@ -2,39 +2,54 @@ states_dir: "robocross/"
 states:
   start: "StartState.py"
   moving: "MovingState.py"
+  astarmoving: "AStarMovingState.py"
   gpsfollow: "GPSFollowState.py"
   lanefollow: "LaneFollowState.py"
+  paused: "PausedState.py"
   stopped: "StoppedState.py"
   emergency: "EmergencyState.py"
   turn: "TurnState.py"
 workers:
-  lightswitch: "LightSwitchDetectorWorker.py"
-  roadsign: "RoadSignDetectorWorker.py"
-  ipm: "IPMWorker.py"
-  semanticsegmentation: "SemanticSegmentationWorker.py"
-  lanelinedetection: "LaneLineDetectionWorker.py"
+  # lightswitch: "LightSwitchDetectorWorker.py"
+  # roadsign: "RoadSignDetectorWorker.py"
+  # ipm: "IPMWorker.py"
+  # semanticsegmentation: "SemanticSegmentationWorker.py"
+  # lanelinedetection: "LaneLineDetectionWorker.py"
   pathplanning: "PathPlanningWorker.py"
   behavioranalysis: "BehavioralAnalysisWorker.py"
   reedsshepp: "ReedsSheppPlanningWorker.py"
+  agronavigator: "AgronavigatorWorker.py"
+  # roadmarkingdetection: "RoadMarkingDetectionWorker.py"
 workerstates:
-  start: ["semanticsegmentation", "ipm", "lanelinedetection", "roadsign"]
-  moving: ["semanticsegmentation", "ipm", "lanelinedetection", "lightswitch", "roadsign", "behavioranalysis", "pathplanning"]
-  lanefollow: ["semanticsegmentation", "ipm", "lanelinedetection", "lightswitch", "roadsign", "behavioranalysis", "pathplanning"]
-  gpsfollow: ["semanticsegmentation", "ipm", "lanelinedetection", "lightswitch", "roadsign", "behavioranalysis", "pathplanning"]
-  stopped: ["semanticsegmentation", "ipm", "lanelinedetection", "roadsign"]
-  turn: ["semanticsegmentation", "ipm", "lanelinedetection", "reedsshepp"]
+  start: []
+  moving: [] # "pathplanning"
+  astarmoving: ["pathplanning", "agronavigator"]
+  lanefollow: ["pathplanning", "agronavigator"]
+  gpsfollow: ["agronavigator"] #, "pathplanning"]
+  stopped: []
+  paused: []
+  turn: ["reedsshepp"]
   emergency: []
 transitions:
   start:
-    start_move: ["moving"]
+    start_move: ["gpsfollow"] # "gpsfollow"
     stop: ["stopped"]
+    pause: ["paused"]
   gpsfollow:
+    start_astar: ["astarmoving"]
     start_move: ["moving"]
-    start_lane_follow: ["lanefollow"]
+    # start_gps_follow: ["gpsfollow"] 
+    # start_lane_follow: ["lanefollow"]
+    pause: ["paused"]
+    stop: ["stopped", "emergency"]
+    turn: ["turn"]
+  astarmoving:
+    start_gps_follow: ["gpsfollow"]
+    pause: ["paused"]
     stop: ["stopped", "emergency"]
     turn: ["turn"]
   moving:
-    start_gps_follow: ["gpsfollow"] 
+    start_gps_follow: ["gpsfollow"]
     start_lane_follow: ["lanefollow"]
     stop: ["stopped", "emergency"]
     turn: ["turn"]
@@ -43,8 +58,10 @@ transitions:
     start_move: ["moving"]
     stop: ["stopped", "emergency"]
     turn: ["turn"]
+  paused:
+    start_move: ["gpsfollow"]
   stopped:
-    start_move: ["moving"]
+    start_move: ["gpsfollow"]
   emergency:
     reset: ["start"]
   turn:
@@ -77,13 +94,33 @@ map-elements:
     ol-type: !!str LineString
     color: !!str 0000ff
   - element:
+    id: "moving_back"
+    name: !!str Путь следования задом
+    ol-type: !!str LineString
+    color: !!str 00ff00
+  - element:
+    id: "terminal"
+    name: !!str Зона терминала
+    ol-type: !!str Polygon
+    color: !!str ffa500
+  - element:
+    id: "traffic_light"
+    name: !!str Зона светофора
+    ol-type: !!str Polygon
+    color: !!str 000000
+  - element:
+    id: "crosswalk"
+    name: !!str Зона пешеходного перехода
+    ol-type: !!str Polygon
+    color: !!str ffffff
+  - element:
     id: "stop"
     name: !!str Зона остановки
     ol-type: !!str Polygon
     color: !!str 800080
   - element:
-    id: "speed10"
-    name: !!str Зона скорости 10
+    id: "speed7"
+    name: !!str Зона скорости 7
     ol-type: !!str Polygon
     color: !!str fe00f0
   - element:
@@ -101,3 +138,28 @@ map-elements:
     name: !!str Зона скорости 40
     ol-type: !!str Polygon
     color: !!str fe00cf
+  - element:
+    id: "obstacle_stop"
+    name: !!str Зона остановки перед препядствием
+    ol-type: !!str Polygon
+    color: !!str 804030
+  - element:
+    id: "next_segment"
+    name: !!str Зона следующего сегмента
+    ol-type: !!str Polygon
+    color: !!str ff00ff
+  - element:
+    id: "to_gpsfollow"
+    name: !!str Зона пеерхода следования по GPS
+    ol-type: !!str Polygon
+    color: !!str 40a8f7
+  - element:
+    id: "to_obstacles"
+    name: !!str Зона пеерхода на объезд пряпядствий 
+    ol-type: !!str Polygon
+    color: !!str 83eb34
+  - element:
+    id: "pause_tick_50"
+    name: !!str Зона паузы на 50 тиков 
+    ol-type: !!str Polygon
+    color: !!str 40524e

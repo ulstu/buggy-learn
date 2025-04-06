@@ -4,12 +4,14 @@ import {Point} from 'ol/geom.js';
 import {Circle, Fill, Stroke, Style, Icon} from 'ol/style.js';
 import {OSM, Vector as VectorSource} from 'ol/source.js';
 import GeoJSON from "ol/format/GeoJSON";
-import {Tile as TileLayer, Vector as VectorLayer} from 'ol/layer.js';
+import {Image as ImageLayer, Tile as TileLayer, Vector as VectorLayer} from 'ol/layer.js';
+import {Raster as RasterSource} from 'ol/source.js';
 import LineString from 'ol/geom/LineString.js';
 import * as ol_color from 'ol/color';
 import {useGeographic, fromLonLat} from 'ol/proj.js';
 import {getCenter} from 'ol/extent.js';
 import Translate from 'ol/interaction/Translate.js';
+import ImageTile from 'ol/ImageTile.js';
 
 let init_point = [48.387626, 54.351436]
 let current_map_file = null;
@@ -67,7 +69,35 @@ let polylineLayer = new VectorLayer({
     })
 });
 
+// // Расчет глубины воды
+// function flood(pixels) {
+//   const pixel = pixels[0];
+//   if (pixel[3]) {
+//     pixel[0] = 134;
+//     pixel[1] = 203;
+//     pixel[2] = 249;
+//     pixel[3] = 250;
+//   }
+//   return pixel;
+// }
 
+// const key = 'LoJGNSWOJhMQek8xozdy';
+
+// const elevation = new ImageTile({
+//   // The RGB values in the source collectively represent elevation.
+//   // Interpolation of individual colors would produce incorrect elevations and is disabled.
+//   url:
+//     'https://api.maptiler.com/tiles/terrain-rgb-v2/{z}/{x}/{y}.webp?key=' + key,
+//   tileSize: 512,
+//   maxZoom: 14,
+//   crossOrigin: '',
+//   interpolate: false,
+// });
+
+// let raster_source = new RasterSource({
+//   sources: [elevation],
+//   operation: flood,
+// });
 
 // Создание объекта (feature) для отображения на карте
 let ego_feature = new Feature({
@@ -93,6 +123,12 @@ const ego_vehicle_layer = new VectorLayer({
   }),
   style: ego_marker_style
 });
+
+// // Создание слоя для растровой отрисовки
+// const raster_layer = new ImageLayer({
+//   opacity: 0.6,
+//   source: raster_source,
+// });
 
 // Инициализация карты с добавлением созданных слоёв
 const map = new Map({
@@ -239,6 +275,52 @@ function load_map(filename){
   });
 }
 
+// Функция для загрузки пути fields2cover
+function load_field_map(field_data){
+  var geojson  = new GeoJSON();
+  var features = [];
+  vector.getSource().getFeatures().forEach(function(feature) {
+    feature.setProperties(feature.getStyle()) //add the layer styles to the feature as properties
+    features.push(feature);
+  });
+  var field_data = geojson.writeFeatures(features);
+
+  console.log(field_data)
+
+  $.post('/load_field_map', {'field_data': field_data}, function(data){
+    if (data['status'] == 'ok'){
+      source.clear();
+      source.addFeatures(new GeoJSON().readFeatures(data['features']));
+      current_map_file = "field_driving";
+
+      vector.getSource().forEachFeature(function(feature) {
+        var fill_color = null;
+        var stroke_color = null;
+        var stroke_width = null;
+        var id = null;
+        var v = feature.values_;
+        if (typeof v==='object' && v!==null && !(v instanceof Array) && !(v instanceof Date)) {
+          fill_color = feature.values_.fill_.color_;
+          stroke_color = feature.values_.stroke_.color_;
+          stroke_width = feature.values_.stroke_.width_;
+          id = feature.values_.id;
+        }
+        else {
+          fill_color = feature.values_[0].fill_.color_;
+          stroke_color = feature.values_[0].stroke_.color_;
+          stroke_width = feature.values_[0].stroke_.width_;
+          id = feature.values_[0].id;
+        }
+
+        feature.setStyle(set_style(fill_color, stroke_color, stroke_width));
+        feature.setProperties({"id": id}); 
+      });
+    }
+    else
+      alert(data['message']);
+  });
+}
+
 // Метод загрузки списка ранее сохраненных карт и заполнение списка карт
 function load_maps() {
   $.get('/get_maps', function(data){
@@ -274,6 +356,10 @@ document.getElementById('saveas').addEventListener('click', function () {
 
 document.getElementById('loadmap').addEventListener('click', function () {
   load_map(mapSelect.value);
+});
+
+document.getElementById('loadfield').addEventListener('click', function () {
+  load_field_map();
 });
 
 // document.getElementById('savesegment').addEventListener('click', function () {
@@ -456,7 +542,7 @@ setInterval(
 
 setInterval(
   () => {
-    console.log('image obj changed');
+    // console.log('image obj changed');
     var unique = $.now();
     $('#img_obj').attr('src', '/get_image?img_type=obj_detector&tm=' + unique);
   },
@@ -465,7 +551,7 @@ setInterval(
 
 setInterval(
   () => {
-    console.log('image seg changed');
+    // console.log('image seg changed');
     var unique = $.now();
     $('#img_seg').attr('src', '/get_image?img_type=seg&tm=' + unique);
   },
@@ -474,7 +560,7 @@ setInterval(
 
 setInterval(
   () => {
-    console.log('image seg changed');
+    // console.log('image seg changed');
     var unique = $.now();
     $('#img_sign').attr('src', '/get_image?img_type=sign&tm=' + unique);
     $.ajax({
@@ -493,15 +579,30 @@ setInterval(
     $.getJSON('/get_params' , function(data) {
       var tbl_body = document.createElement("tbody");
       var odd_even = false;
-      for (var key in data){
-        var tbl_row = tbl_body.insertRow();
-        tbl_row.className = odd_even ? "odd" : "even";
-        var k_cell = tbl_row.insertCell();
-        k_cell.appendChild(document.createTextNode(key.toString()));
-        k_cell.className = "fw-bold";
-        var v_cell = tbl_row.insertCell();
-        v_cell.appendChild(document.createTextNode(data[key].toString()));   
-        odd_even = !odd_even; 
+
+      for (var key in data) {
+        if (key == 'lidar_last_message_time') {
+          var lidar_answer_elapsed_time = Math.floor(Date.now() / 1000) - data[key]; // Секунды
+          
+          if (lidar_answer_elapsed_time > 3) {}
+            // alert('Связь с передним лидаром потеряна!');
+        }
+        else if (key == 'camera_last_message_time') {
+          var camera_answer_elapsed_time = Math.floor(Date.now() / 1000) - data[key];
+          
+          if (camera_answer_elapsed_time > 3) {}
+            // alert('Связь с видеокамерой потеряна!');
+        }
+        else {
+          var tbl_row = tbl_body.insertRow();
+          tbl_row.className = odd_even ? "odd" : "even";
+          var k_cell = tbl_row.insertCell();
+          k_cell.appendChild(document.createTextNode(key.toString()));
+          k_cell.className = "fw-bold";
+          var v_cell = tbl_row.insertCell();
+          v_cell.appendChild(document.createTextNode(data[key].toString()));   
+          odd_even = !odd_even;
+        }
       }
       $("#params").empty();
       $("#params").append(tbl_body);

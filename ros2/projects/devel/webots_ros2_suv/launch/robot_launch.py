@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 import os
 import pathlib
 import launch
@@ -17,14 +17,46 @@ from nav2_common.launch import RewrittenYaml
 
 PACKAGE_NAME = 'webots_ros2_suv'
 USE_SIM_TIME = True
+CONFIG_DIRECTORY = 'simulator'
 
 def get_ros2_nodes(*args):
+    package = get_package_share_directory('webots_ros2_suv')
     pkg_share = FindPackageShare(package=PACKAGE_NAME).find(PACKAGE_NAME)
+
+    lane_follower = Node(
+        package=PACKAGE_NAME,
+        executable='lane_follower',
+        parameters=[{'use_sim_time': USE_SIM_TIME}]
+    )
 
     node_sensors_webots = Node(
         package=PACKAGE_NAME,
         executable='node_sensors_webots',
         name='node_sensors_webots',
+        output='screen' ,
+        parameters=[{'use_sim_time': USE_SIM_TIME}]
+    )
+
+    node_localmap = Node(
+        package=PACKAGE_NAME,
+        executable='node_localmap',
+        name='node_localmap',
+        output='screen' ,
+        parameters=[{'use_sim_time': USE_SIM_TIME}]
+    )
+
+    pcl_map_node = Node(
+        package="pcl_maps",
+        executable='pcl_map_node',
+        name='pcl_map_node',
+        output='screen' ,
+        parameters=[{'use_sim_time': USE_SIM_TIME, "config_dir": os.path.join(package, "config", CONFIG_DIRECTORY)}]
+    )
+
+    node_globalmap = Node(
+        package=PACKAGE_NAME,
+        executable='node_globalmap',
+        name='node_globalmap',
         output='screen' ,
         parameters=[{'use_sim_time': USE_SIM_TIME}]
     )
@@ -37,10 +69,25 @@ def get_ros2_nodes(*args):
         parameters=[{'use_sim_time': USE_SIM_TIME}]
     )
 
+    node_visual = Node(
+        package=PACKAGE_NAME,
+        executable='node_visual',
+        name='node_visual',
+        output='screen' ,
+        parameters=[{'use_sim_time': USE_SIM_TIME}]
+    )
+    node_point_obstacles = Node(
+        package=PACKAGE_NAME,
+        executable='node_point_obstacles',
+        name='node_point_obstacles',
+        output='screen' ,
+        parameters=[{'use_sim_time': USE_SIM_TIME}]
+    )
+
     package_dir = get_package_share_directory(PACKAGE_NAME)
     urdf = os.path.join(
         package_dir,
-        os.path.join(package_dir, pathlib.Path(os.path.join(package_dir, 'resource', 'gazelle.urdf'))))
+        os.path.join(package_dir, pathlib.Path(os.path.join(package_dir, 'resource', 'suv.urdf'))))
     with open(urdf, 'r') as infp:
         robot_desc = infp.read()
 
@@ -68,10 +115,44 @@ def get_ros2_nodes(*args):
             parameters=[{'use_sim_time': USE_SIM_TIME}]
         ))
 
+    rviz2_node = Node(
+            package='rviz2',
+            namespace='',
+            executable='rviz2',
+            name='rviz2',
+            arguments=['-d', [os.path.join(pkg_share, 'config/config.rviz')]]
+        )
+
+    depth_to_laserscan = Node(
+        package='depthimage_to_laserscan',
+        executable='depthimage_to_laserscan_node',
+        name='depthimage_to_laserscan_node',
+        remappings=[
+            ('/depth_camera_info', '/vehicle/range_finder/camera_info'),
+            ('/depth', '/vehicle/range_finder'),
+        ],
+        parameters=[{
+            #'use_sim_time': use_sim_time,
+            'range_min': 1.0,
+            'range_max': 40.0,
+            'scan_height': 10, # если h - высота изображения, то этот параметр задает, область видимости по горизонтали высотой scan_height
+            'output_frame': 'base_link',
+            'scan_time': 0.033
+            }]
+    )
+
     return [
         state_publisher_node,
         node_sensors_webots,
+        #node_localmap,
+        #node_globalmap,
         node_ego_controller,
+        # node_point_obstacles,
+        # node_visual,
+        # depth_to_laserscan,
+        # pcl_map_node,
+        #rviz2_node,
+        #lane_follower,
     ] + static_transform_nodes
 
 
@@ -89,10 +170,12 @@ def generate_launch_description():
         respawn=True
     )
 
+    os.environ['CONFIG_DIRECTORY'] = CONFIG_DIRECTORY
+
     return LaunchDescription([
         DeclareLaunchArgument(
             'world',
-            default_value='robocross_gazelle.wbt',
+            default_value='robocross.wbt',
             description='Robocross simulation world'
         ),
         webots,

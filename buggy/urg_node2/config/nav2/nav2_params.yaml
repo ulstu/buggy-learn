@@ -1,0 +1,234 @@
+### ros2 launch nav2_bringup localization_launch.py params_file:=nav2_params.yaml map:=../slam_toolbox/map/real_map.yaml use_sim_time:=false
+### ros2 launch nav2_bringup navigation_launch.py params_file:=nav2_params.yaml map_subscribe_transient_local:=true use_sim_time:=false
+
+# Adaptive Monte Carlo Localization для определения позиции и ориентации робота на карте
+amcl:
+  ros__parameters:
+    # alpha1: 0.15
+    # alpha2: 0.15
+    # alpha3: 0.15
+    # alpha4: 0.15
+    # alpha5: 0.15
+    # base_frame_id: base_footprint
+    # beam_skip_distance: 0.7
+    # beam_skip_error_threshold: 0.99
+    # beam_skip_threshold: 0.5
+    # do_beamskip: true
+    # global_frame_id: map
+    # lambda_short: 0.1
+    # laser_likelihood_max_dist: 1.5
+    # laser_max_range: 5.6
+    # laser_min_range: 0.0
+    set_initial_pose: true
+    initial_pose: {
+      x: 0.240,
+      y: 0.007,
+      z: 0.000,
+      yaw: 0.0,
+    }
+    # laser_model_type: "beam"
+    # max_beams: 30
+    # max_particles: 500
+    # min_particles: 100
+    # odom_frame_id: odom
+    # pf_err: 0.1
+    # pf_z: 0.95
+    # recovery_alpha_fast: 0.0
+    # recovery_alpha_slow: 0.0
+    # resample_interval: 3
+    # robot_model_type: "differential"
+    # save_pose_rate: 0.5
+    # sigma_hit: 0.2
+    # tf_broadcast: true
+    # transform_tolerance: 0.1
+    # service_introspection_mode: "disabled"
+    # update_min_a: 0.1
+    # update_min_d: 0.1
+    # z_hit: 0.5
+    # z_max: 0.05
+    # z_rand: 0.5
+    # z_short: 0.05
+    always_reset_initial_pose: true
+    # scan_topic: scan
+
+bt_navigator:
+  ros__parameters:
+    use_sim_time: false
+    global_frame: map
+    robot_base_frame: base_link
+    odom_topic: /odom
+    # enable_groot_monitoring: true
+    # groot_zmq_publisher_port: 1666
+    # groot_zmq_server_port: 1667
+    default_bt_xml_filename: "/home/nvidia/Desktop/RM_ws/src/urg_node2/config/nav2/bt_navigator/navigate_w_replanning_and_recovery.xml"
+    default_nav_to_pose_bt_xml: "/home/nvidia/Desktop/RM_ws/src/urg_node2/config/nav2/bt_navigator/navigate_w_replanning_and_recovery.xml"
+    default_nav_through_poses_bt_xml: "/home/nvidia/Desktop/RM_ws/src/urg_node2/config/nav2/bt_navigator/navigate_w_replanning_and_recovery.xml"
+    plugin_lib_names:
+    - nav2_compute_path_to_pose_action_bt_node
+    - nav2_follow_path_action_bt_node
+    # - nav2_back_up_action_bt_node
+    - nav2_spin_action_bt_node
+    - nav2_wait_action_bt_node
+    - nav2_clear_costmap_service_bt_node
+    # - nav2_is_stuck_condition_bt_node
+    # - nav2_goal_reached_condition_bt_node
+    - nav2_goal_updated_condition_bt_node
+    # - nav2_initial_pose_received_condition_bt_node
+    # - nav2_reinitialize_global_localization_service_bt_node
+    - nav2_rate_controller_bt_node
+    # - nav2_distance_controller_bt_node
+    # - nav2_speed_controller_bt_node
+    # - nav2_truncate_path_action_bt_node
+    - nav2_goal_updater_node_bt_node
+    - nav2_recovery_node_bt_node
+    - nav2_pipeline_sequence_bt_node
+    # - nav2_round_robin_node_bt_node
+    # - nav2_transform_available_condition_bt_node
+    # - nav2_time_expired_condition_bt_node
+    # - nav2_distance_traveled_condition_bt_node
+
+# Контроллер движения
+controller_server:
+  ros__parameters:
+    # Основные параметры
+    controller_frequency: 5.0 # Гц
+
+    # Пороговые значения скорости
+    # min_x_velocity_threshold: 0.001    # Минимальная линейная скорость (м/с)
+    # min_y_velocity_threshold: 0.3      # Минимальная боковая скорость (м/с)
+    # min_theta_velocity_threshold: 0.01 # Минимальная угловая скорость (рад/с)
+    # max_angular_accel: 3.2             # Максимальное угловое ускорение (рад/с²)
+
+    progress_checker_plugins: ['progress_checker']
+    goal_checker_plugins: ['goal_checker']
+    controller_plugins: ['FollowPath']
+
+    # Проверка движения
+    progress_checker:
+      plugin: 'nav2_controller::SimpleProgressChecker'
+      # required_movement_radius: 0.1 # Минимальное смещение за заданное время (м)
+      # movement_time_allowance: 10.0 # Время на прогресс перед пересчётом маршрута (с)
+    # Проверка достижения цели
+    goal_checker:
+      plugin: 'nav2_controller::SimpleGoalChecker'
+      xy_goal_tolerance: 0.75      # Допуск по отклонению в положении (м)
+      yaw_goal_tolerance: 0.436332 # Допуск по отклонению в ориентации (рад)
+      # stateful: true
+    FollowPath:
+      # plugin: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
+      # desired_linear_vel: 0.5
+      # lookahead_dist: 1.2
+      # min_lookahead_dist: 0.8
+      # max_lookahead_dist: 1.5
+      # lookahead_time: 2.0
+      # rotate_to_heading_angular_vel: 1.8
+      # transform_tolerance: 0.1
+      # use_velocity_scaled_lookahead_dist: false
+      # min_approach_linear_velocity: 0.05
+      # approach_velocity_scaling_dist: 0.6
+      # use_collision_detection: true
+      # max_allowed_time_to_collision_up_to_carrot: 1.0
+      # use_regulated_linear_velocity_scaling: true
+      # use_fixed_curvature_lookahead: true
+      # curvature_lookahead_dist: 0.5
+      # use_cost_regulated_linear_velocity_scaling: false
+      # regulated_linear_scaling_min_radius: 0.5
+      # regulated_linear_scaling_min_speed: 0.15
+      # use_rotate_to_heading: true
+      # allow_reversing: false
+      # rotate_to_heading_min_angle: 1.2
+      # max_angular_accel: 2.5
+      # max_robot_pose_search_dist: 10.0
+
+      plugin: 'nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController'
+      # use_fixed_curvature_lookahead: false # Использовать фиксированную кривизну траектории движения
+
+      failure_tolerance: -1.0
+
+      # lookahead_dist: 1.5      # Дистанция предсказания траектории (м)
+      # min_lookahead_dist: 0.75 # Минимальное значение упреждения (м)
+      # max_lookahead_dist: 1.5  # Максимальное значение упреждения (м)
+      # lookahead_time: 0.1      # Время упреждения (с)
+
+      # min_approach_linear_velocity: 0.1      # Минимальная линейная скорость при приближении к цели (м/с)
+      approach_velocity_scaling_dist: 0.1      # С какой дистанции начать замедляться (м)
+      regulated_linear_scaling_min_radius: 0.1 # Минимальный радиус поворота с замедлением (м)
+
+      # Учёт препятствий
+      use_collision_detection: true        # Избегать столкновения
+      # cost_scaling_dist: 0.5             # Дистанция учёта препятствий (м)
+      # cost_scaling_gain: 1.0             # Усиление влияния препятствий
+      # inflation_cost_scaling_factor: 0.1 # Радиус "опасной зоны" вокруг препятствий (м)
+
+      # use_rotate_to_heading: true
+      # rotate_to_heading_min_angle: 1.0
+
+      allow_reversing: false # Разрешить движение задним ходом
+
+      ### ?
+
+      # desired_linear_vel: 0.3
+      # rotate_to_heading_angular_vel: 1.0
+      # transform_tolerance: 0.1
+      # use_velocity_scaled_lookahead_dist: false
+      # max_allowed_time_to_collision_up_to_carrot: 1.0
+      # use_regulated_linear_velocity_scaling: true
+      # use_cost_regulated_linear_velocity_scaling: false
+      # regulated_linear_scaling_min_speed: 0.25
+      # max_robot_pose_search_dist: 10.0
+      # interpolate_curvature_after_goal: false
+
+      ###
+
+global_costmap:
+  global_costmap:
+    ros__parameters:
+      update_frequency: 1.0  # 20.0
+      publish_frequency: 1.0 # 10.0
+      global_frame: map
+      robot_base_frame: imu
+      rolling_window: false
+      resolution: 0.05
+      robot_radius: 0.3
+      # Углы эго-автомобиля: правый задний, правый передний, левый передний, левый задний
+      # footprint: '[ [-0.2, 0.25], [0.8, 0.25], [0.8, -0.25], [-0.2, -0.25] ]'
+      track_unknown_space: true
+      plugins: ['static_layer', 'obstacle_layer', 'inflation_layer']
+      static_layer:
+        plugin: 'nav2_costmap_2d::StaticLayer'
+        map_subscribe_transient_local: true
+      obstacle_layer:
+        plugin: 'nav2_costmap_2d::ObstacleLayer'
+        enabled: true
+        footprint_clearing_enabled: true # Очистка препятствий под эго-автомобилем
+        observation_sources: scan
+        scan:
+          topic: /scan
+          sensor_frame: laser
+          data_type: 'LaserScan'
+          # min_obstacle_height: 0.0
+          # max_obstacle_height: 0.5
+          clearing: true
+          marking: true
+          raytrace_min_range: 0.1  # Минимальное расстояние, с которого лучи учитываются в расчёте свободного пространства
+          raytrace_max_range: 5.6  # Максимальная дальность, до которой лучи очищают пространство от препятствий
+          obstacle_min_range: 0.1  # Учитываем препятствия от 10 см
+          obstacle_max_range: 5.6  # до 5.6 м, игнорируя шумы вблизи лидара
+      inflation_layer:
+        plugin: 'nav2_costmap_2d::InflationLayer'
+        # cost_scaling_factor: 1.0
+        inflation_radius: 1.0
+      always_send_full_costmap: true
+
+# Загрузка статической глобальной карты, построенной с использованием SLAM Toolbox
+map_server:
+  ros__parameters:
+    yaml_filename: '/home/nvidia/Desktop/RM_ws/src/urg_node2/config/slam_toolbox/map/real_map.yaml'
+    map_subscribe_transient_local: true
+
+# planner_server:
+#   ros__parameters:
+#     planner_plugins: ['GridBased']
+#     GridBased:
+#       plugin: 'nav2_navfn_planner/NavfnPlanner'
+#       tolerance: 0.3

@@ -7,12 +7,10 @@ import os
 def generate_data_files(share_path, dir):
     data_files = []
     for path, _, files in os.walk(dir):
-        list_entry = (os.path.dirname(os.path.dirname(share_path)) + '/' + path,
-                      [os.path.join(path, f) for f in files if not f.startswith('.')])
+        list_entry = (os.path.dirname(os.path.dirname(share_path)) + '/' + path, [os.path.join(path, f) for f in files if not f.startswith('.')])
         data_files.append(list_entry)
 
     return data_files
-
 
 package_name = 'webots_ros2_suv'
 
@@ -31,7 +29,7 @@ data_files += generate_data_files('share/' + package_name + '/protos/', 'protos/
 setup(
     name=package_name,
     version='2023.0.1',
-    packages=[package_name, "webots_ros2_suv/lib"],
+    packages=[package_name, "webots_ros2_suv/lib", "webots_ros2_suv/states", "webots_ros2_suv/states/robocross", "webots_ros2_suv/workers"],
     data_files=data_files,
     install_requires=['setuptools', 'launch'],
     zip_safe=True,
@@ -51,8 +49,17 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            'field_follower = webots_ros2_suv.field_follower:main',
             'node_sensors_webots = webots_ros2_suv.node_sensors_webots:main',
             'node_ego_controller = webots_ros2_suv.node_ego_controller:main',
+            'node_point_obstacles = webots_ros2_suv.node_point_obstacles:main',
+            'node_sensors_gazelle = webots_ros2_suv.node_sensors_gazelle:main',
+            'node_visual = webots_ros2_suv.node_visual:main',
+            'node_drive_gazelle = webots_ros2_suv.node_drive_gazelle:main',
+            "node_lmp_sender = webots_ros2_suv.node_lmp_sender:main",
+            "ackermann_keyboard_teleop_node = webots_ros2_suv.ackermann_keyboard_teleop_node:main",
+            "pointcloud_to_laserscan_bridge_node = webots_ros2_suv.pointcloud_to_laserscan_bridge_node:main",
+            "node_nav2_ackerman_control = webots_ros2_suv.node_nav2_ackerman_control:main"
         ],
         'launch.frontend.launch_extension': ['launch_ros = launch_ros']
     }
