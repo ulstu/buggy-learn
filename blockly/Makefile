@@ -18,7 +18,7 @@ CONTAINER_NAME:=${IMAGE}-${FLAVOR}
 
 .PHONY: all
 
-all: copy-working-folders run copy-working-files  start-webots
+all: copy-working-folders run copy-working-files start-dev-server start-webots
 # make all FLAVOR='hibers-3' ROBOT_PANEL_PORT=1564 VS_PORT=1573 WEBOTS_STREAM_PORT=1583
 colors:
 	$(eval NC=\033[1;0m)
