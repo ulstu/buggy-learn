@@ -207,7 +207,7 @@ def generate_launch_description():
         robot_state_publisher, 
         robot_controller_node, 
         robot_localization_node, 
-        async_slam_toolbox_node, 
+        # async_slam_toolbox_node, 
         # localization_slam_toolbox_node, 
         rviz, 
         joint_state_publisher_gui, 

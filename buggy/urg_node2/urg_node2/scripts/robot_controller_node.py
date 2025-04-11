@@ -102,8 +102,6 @@ class RobotControllerNode(Node):
         speed = message.speed
         steering_angle = message.steering_angle
 
-        self._logger.info(f'{speed, steering_angle}')
-
         jsonrpc_message = {
             'jsonrpc': '2.0', 
             'method': 'set_control_values', 

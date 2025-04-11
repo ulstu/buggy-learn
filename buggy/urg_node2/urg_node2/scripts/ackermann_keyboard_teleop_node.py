@@ -19,7 +19,7 @@ control_keys_bindings = {
 }
 
 ROBOT_MAX_SPEED = 8.0  # См/с
-ROBOT_MAX_STEERING_ANGLE = 10.0  # Градусы
+ROBOT_MAX_STEERING_ANGLE = 30.0  # Градусы
 
 
 class AckermannKeyboardTeleopNode(Node):
